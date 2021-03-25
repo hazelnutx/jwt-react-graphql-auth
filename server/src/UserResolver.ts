@@ -24,14 +24,14 @@ class LoginResponse {
 export class UserResolver {
   @Query(() => String)
   hello() {
-    return 'hi'
+    return 'raul'
   }
 
   @Query(() => String)
   @UseMiddleware(isAuth)
   ah(@Ctx() { payload }: MyContext) {
     console.log(payload)
-    return `your user id is : ${payload!.userId}`
+    return `your user id is : ${payload?.userId}`
   }
   @Query(() => [User])
   users() {

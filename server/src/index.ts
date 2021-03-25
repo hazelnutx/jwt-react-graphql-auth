@@ -13,13 +13,13 @@ import 'dotenv/config'
   })
 
   await createConnection()
-
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [UserResolver],
     }),
-    context: ({ res }) => ({
+    context: ({ req, res }) => ({
       res,
+      req,
     }),
   })
 
