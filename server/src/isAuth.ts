@@ -5,7 +5,7 @@ import { verify } from 'jsonwebtoken'
 // bearer <token>
 
 export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
-  const authorization = context.req.headers.authorization!
+  const authorization = context.req.headers['authorization']
 
   if (!authorization) throw new Error('Not authenticated')
 

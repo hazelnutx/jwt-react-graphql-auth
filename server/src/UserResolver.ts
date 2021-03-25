@@ -3,16 +3,19 @@ import {
   Arg,
   Ctx,
   Field,
+  Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
   UseMiddleware,
 } from 'type-graphql'
+import { getConnection } from 'typeorm'
 import { createAccessToken, createRefreshToken } from './auth'
 import { User } from './entity/User'
 import { isAuth } from './isAuth'
 import { MyContext } from './MyContext'
+import { sendRefreshToken } from './sendRefreshToken'
 
 @ObjectType()
 class LoginResponse {
@@ -29,13 +32,25 @@ export class UserResolver {
 
   @Query(() => String)
   @UseMiddleware(isAuth)
-  ah(@Ctx() { payload }: MyContext) {
+  test(@Ctx() { payload }: MyContext) {
     console.log(payload)
     return `your user id is : ${payload?.userId}`
   }
+
   @Query(() => [User])
   users() {
     return User.find()
+  }
+
+  // Do not make in production only dev
+  // As the function states, it revokes / makes the versionToken a different number than the actual token.
+  @Mutation(() => Boolean)
+  async revokeRefreshTokenForUser(@Arg('userId', () => Int) userId: number) {
+    await getConnection()
+      .getRepository(User)
+      .increment({ id: userId }, 'tokenVersion', 1)
+
+    return true
   }
 
   @Mutation(() => LoginResponse)
@@ -61,9 +76,7 @@ export class UserResolver {
     // Login success
 
     // Be sure to se the graphql setting (inside /graphql) request.credentials from 'omit' > 'include' so it would save your cookies
-    res.cookie('jid', createRefreshToken(user), {
-      httpOnly: true,
-    })
+    sendRefreshToken(res, createRefreshToken(user))
 
     return {
       accessToken: createAccessToken(user),
